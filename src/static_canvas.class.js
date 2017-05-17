@@ -1332,6 +1332,22 @@
      */
     _setSVGObjects: function(markup, reviver) {
       var instance;
+      if (this.clipTo && this.clipTo.type) {
+        markup.push('<clipPath ',
+            'id="canvas-clipMask">');
+        markup.push(this.clipTo.toSVG(reviver));
+        markup.push('</clipPath> ');
+      }
+
+      markup.push(
+        '<g ',
+        'id="canvas" ',
+        'style="display:inline" ');
+      if (this.clipTo && this.clipTo.type) {
+        markup.push('clip-path="url(#canvas-clipMask)" ');
+      }
+      markup.push('>' );
+
       for (var i = 0, objects = this.getObjects(), len = objects.length; i < len; i++) {
         instance = objects[i];
         if (instance.excludeFromExport) {
@@ -1339,6 +1355,8 @@
         }
         this._setSVGObject(markup, instance, reviver);
       }
+
+      markup.push('</g>');
     },
 
     /**
@@ -1417,8 +1435,16 @@
         }
       }
       else {
+        var newIdx = 0;
+
         removeFromArray(this._objects, object);
-        this._objects.unshift(object);
+        for (var i = this._objects.length - 1; i >= 0; --i) {
+          var obj = this._objects[i];
+          if(obj.pos >= 100 ) {
+            newIdx = i;
+          }
+        }
+        this._objects.splice(newIdx, 0, object);
       }
       return this.renderAll && this.renderAll();
     },
@@ -1446,7 +1472,17 @@
       }
       else {
         removeFromArray(this._objects, object);
-        this._objects.push(object);
+        var newIdx = 0;
+        for (var i = 0; i < this._objects.length; ++i) {
+
+          var obj = this._objects[i];
+
+          if(obj.pos <= 1000 ) {
+            newIdx = i;
+          }
+
+        }
+        this._objects.splice(newIdx, 0, object);
       }
       return this.renderAll && this.renderAll();
     },
